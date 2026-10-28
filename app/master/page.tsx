@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 import { WorkshopCases } from "@/components/workshop-cases"
 
 const meta = [
-  { label: "Дата и время", value: "13 октября, 19:30" },
+  { label: "Дата и время", value: "9 ноября, 19:30" },
   { label: "Формат", value: "Онлайн мастер-класс в Zoom" },
   { label: "Длительность", value: "2 часа" },
   { label: "Стоимость участия", value: "9 990 ₽" },
