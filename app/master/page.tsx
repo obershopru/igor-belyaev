@@ -154,7 +154,7 @@ export default function MasterPage() {
             <h2 className={sectionTitle}>Стоимость и формат</h2>
             <div className="mt-6 flex flex-col gap-3 text-lg leading-relaxed text-zinc-200">
               <p className="font-bold">Онлайн мастер-класс в Zoom</p>
-              <p><span className="text-zinc-400">Дата и время:</span> 13 октября, 19:30</p>
+              <p><span className="text-zinc-400">Дата и время:</span> 9 ноября, 19:30</p>
               <p><span className="text-zinc-400">Длительность:</span> 2 часа</p>
               <p><span className="text-zinc-400">Стоимость участия:</span> 9 990 рублей</p>
             </div>

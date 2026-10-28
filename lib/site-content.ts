@@ -92,7 +92,7 @@ export const defaultWorkshopContent: WorkshopContent = {
   intro: 'Как сохранять сильную позицию в переговорах, обсуждать деньги и условия, выдерживать давление и приходить к конкретным договорённостям.',
   button: 'Оплатить',
   meta: [
-    { label: 'Дата и время', value: '13 октября, 19:30' },
+    { label: 'Дата и время', value: '9 ноября, 19:30' },
     { label: 'Формат', value: 'Онлайн мастер-класс в Zoom' },
     { label: 'Длительность', value: '2 часа' },
     { label: 'Стоимость участия', value: '9 990 ₽' },
@@ -161,7 +161,7 @@ export const defaultWorkshopContent: WorkshopContent = {
   priceTitle: 'Стоимость и формат',
   formatLabel: 'Формат',
   dateLabel: 'Дата и время',
-  date: '13 октября, 19:30',
+  date: '9 ноября, 19:30',
   durationLabel: 'Длительность',
   duration: '2 часа',
   priceLabel: 'Стоимость участия',
