@@ -1,10 +1,9 @@
 import { and, eq } from 'drizzle-orm'
 import { getDb } from '@/lib/db'
 import { workshopLeads } from '@/lib/db/schema'
+import { DEFAULT_MASTERCLASS_PRICE } from '@/lib/masterclass'
 
 const API_URL = 'https://api.yookassa.ru/v3'
-export const MASTERCLASS_PRICE = 9990
-export const MASTERCLASS_AMOUNT = MASTERCLASS_PRICE.toFixed(2)
 export const MASTERCLASS_DESCRIPTION = 'Участие в онлайн-мастер-классе по переговорам'
 
 export type YooKassaPayment = {
@@ -63,19 +62,22 @@ export async function createYooKassaPayment({
   leadId,
   checkoutKey,
   phone,
+  price,
 }: {
   leadId: number
   checkoutKey: string
   phone: string
+  price: number
 }) {
   const config = getYooKassaConfig()
   if (!config) throw new Error('YooKassa is not configured')
+  const amount = price.toFixed(2)
 
   return yooKassaRequest<YooKassaPayment>('/payments', {
     method: 'POST',
     headers: { 'Idempotence-Key': checkoutKey },
     body: JSON.stringify({
-      amount: { value: MASTERCLASS_AMOUNT, currency: 'RUB' },
+      amount: { value: amount, currency: 'RUB' },
       payment_method_data: { type: 'sbp' },
       capture: true,
       confirmation: {
@@ -90,7 +92,7 @@ export async function createYooKassaPayment({
           {
             description: MASTERCLASS_DESCRIPTION,
             quantity: '1.00',
-            amount: { value: MASTERCLASS_AMOUNT, currency: 'RUB' },
+            amount: { value: amount, currency: 'RUB' },
             payment_mode: 'full_payment',
             payment_subject: 'service',
             vat_code: config.vatCode,
@@ -117,8 +119,9 @@ export function isYooKassaCheckoutUrl(value: unknown): value is string {
   }
 }
 
-export function isMasterclassAmount(amount: YooKassaPayment['amount']) {
-  return amount?.currency === 'RUB' && Number(amount.value) === MASTERCLASS_PRICE
+// Leads created before prices became editable have no stored amount and were charged the default price.
+export function isMasterclassAmount(amount: YooKassaPayment['amount'], expectedPrice: number | null) {
+  return amount?.currency === 'RUB' && Number(amount.value) === (expectedPrice ?? DEFAULT_MASTERCLASS_PRICE)
 }
 
 export function isValidCheckoutKey(value: unknown): value is string {
@@ -141,7 +144,7 @@ export async function getLeadPaymentByCheckoutKey(checkoutKey: string) {
 export async function verifyAndStorePayment(paymentId: string) {
   const db = getDb()
   const [lead] = await db
-    .select({ id: workshopLeads.id, checkoutKey: workshopLeads.checkoutKey })
+    .select({ id: workshopLeads.id, checkoutKey: workshopLeads.checkoutKey, paymentAmount: workshopLeads.paymentAmount })
     .from(workshopLeads)
     .where(and(eq(workshopLeads.yookassaPaymentId, paymentId), eq(workshopLeads.source, 'masterclass')))
     .limit(1)
@@ -153,7 +156,7 @@ export async function verifyAndStorePayment(paymentId: string) {
     payment.id !== paymentId ||
     payment.metadata?.lead_id !== String(lead.id) ||
     payment.metadata?.checkout_key !== lead.checkoutKey ||
-    !isMasterclassAmount(payment.amount)
+    !isMasterclassAmount(payment.amount, lead.paymentAmount)
   ) {
     throw new Error('YooKassa payment does not match the order')
   }

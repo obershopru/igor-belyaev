@@ -51,6 +51,10 @@ function verifyToken(token: string | undefined) {
   return safeEqual(signature, sign(payload, secret))
 }
 
+export function isAdminToken(token: string | undefined) {
+  return verifyToken(token)
+}
+
 export function isAdminRequest(request: Request) {
   const cookieHeader = request.headers.get('cookie') ?? ''
   const cookie = cookieHeader.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${COOKIE_NAME}=`))

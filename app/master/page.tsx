@@ -1,19 +1,16 @@
 import type { Metadata } from "next"
 import { Banknote, Ban, Gauge, Users } from "lucide-react"
 import { CaptureForm } from "@/components/capture-form"
+import { WorkshopCases } from "@/components/workshop-cases"
+import { formatPrice, getMasterclassSettings } from "@/lib/masterclass"
 
 export const metadata: Metadata = {
   title: "Мастер-класс по переговорам — Игорь Беляев",
   description: "Практический онлайн-мастер-класс Игоря Беляева о сложных переговорах, давлении и защите своей позиции.",
 }
-import { WorkshopCases } from "@/components/workshop-cases"
 
-const meta = [
-  { label: "Дата и время", value: "9 ноября, 19:30" },
-  { label: "Формат", value: "Онлайн мастер-класс в Zoom" },
-  { label: "Длительность", value: "2 часа" },
-  { label: "Стоимость участия", value: "9 990 ₽" },
-]
+// The admin panel revalidates this page on save; the interval is a fallback.
+export const revalidate = 3600
 
 const program = [
   {
@@ -58,7 +55,16 @@ const faq = [
 
 const sectionTitle = "text-balance text-[clamp(2.25rem,5vw,4.25rem)] font-black uppercase leading-[0.98] tracking-[-0.03em]"
 
-export default function MasterPage() {
+export default async function MasterPage() {
+  const settings = await getMasterclassSettings()
+  const price = formatPrice(settings.price)
+  const meta = [
+    { label: "Дата и время", value: settings.date },
+    { label: "Формат", value: "Онлайн мастер-класс в Zoom" },
+    { label: "Длительность", value: settings.duration },
+    { label: "Стоимость участия", value: `${price} ₽` },
+  ]
+
   return (
     <main className="min-h-dvh bg-black font-sans text-white">
       <section className="grid grid-cols-1 items-stretch lg:grid-cols-[1.1fr_0.9fr]">
@@ -154,9 +160,9 @@ export default function MasterPage() {
             <h2 className={sectionTitle}>Стоимость и формат</h2>
             <div className="mt-6 flex flex-col gap-3 text-lg leading-relaxed text-zinc-200">
               <p className="font-bold">Онлайн мастер-класс в Zoom</p>
-              <p><span className="text-zinc-400">Дата и время:</span> 9 ноября, 19:30</p>
-              <p><span className="text-zinc-400">Длительность:</span> 2 часа</p>
-              <p><span className="text-zinc-400">Стоимость участия:</span> 9 990 рублей</p>
+              <p><span className="text-zinc-400">Дата и время:</span> {settings.date}</p>
+              <p><span className="text-zinc-400">Длительность:</span> {settings.duration}</p>
+              <p><span className="text-zinc-400">Стоимость участия:</span> {price} рублей</p>
             </div>
             <p className="mt-6 max-w-[60ch] text-base leading-relaxed text-zinc-400">
               Мастер-класс проходит в формате бизнес-игры с отдельными комнатами для участников: каждый сможет включиться в практику и получить личное взаимодействие.
@@ -165,7 +171,7 @@ export default function MasterPage() {
               После заполнения формы вы перейдёте на защищённую страницу ЮKassa. Участие подтвердится после успешной оплаты.
             </p>
           </div>
-          <CaptureForm mode="masterclass" />
+          <CaptureForm mode="masterclass" price={price} />
         </div>
       </section>
 

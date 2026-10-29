@@ -36,7 +36,6 @@ export async function POST(request: Request) {
       payment.id !== paymentId ||
       !Number.isSafeInteger(leadId) ||
       !checkoutKey ||
-      !isMasterclassAmount(payment.amount) ||
       (payment.status !== 'succeeded' && payment.status !== 'canceled')
     ) {
       return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
@@ -49,6 +48,11 @@ export async function POST(request: Request) {
       eq(workshopLeads.checkoutKey, checkoutKey),
       eq(workshopLeads.yookassaPaymentId, paymentId),
     )
+
+    const [lead] = await db.select({ paymentAmount: workshopLeads.paymentAmount }).from(workshopLeads).where(match).limit(1)
+    if (!lead || !isMasterclassAmount(payment.amount, lead.paymentAmount)) {
+      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
+    }
 
     if (payment.status === 'canceled') {
       await db.update(workshopLeads).set({ paymentStatus: 'canceled' }).where(and(match, eq(workshopLeads.paymentStatus, 'pending')))
