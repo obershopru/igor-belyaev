@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { workshopLeads } from '@/lib/db/schema'
+import { readMasterclassSettings } from '@/lib/masterclass'
 import { createYooKassaPayment, getYooKassaConfig, isYooKassaCheckoutUrl } from '@/lib/yookassa'
 
 export const runtime = 'nodejs'
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
 
   try {
     const db = getDb()
+    const { price } = await readMasterclassSettings()
     const [inserted] = await db.insert(workshopLeads).values({
       name,
       phone,
@@ -64,10 +66,12 @@ export async function POST(request: Request) {
       consentAt: new Date(),
       checkoutKey,
       paymentStatus: 'pending',
+      paymentAmount: price,
     }).onConflictDoNothing().returning({
       id: workshopLeads.id,
       phone: workshopLeads.phone,
       paymentStatus: workshopLeads.paymentStatus,
+      paymentAmount: workshopLeads.paymentAmount,
       yookassaPaymentId: workshopLeads.yookassaPaymentId,
       paymentConfirmationUrl: workshopLeads.paymentConfirmationUrl,
     })
@@ -76,6 +80,7 @@ export async function POST(request: Request) {
       id: workshopLeads.id,
       phone: workshopLeads.phone,
       paymentStatus: workshopLeads.paymentStatus,
+      paymentAmount: workshopLeads.paymentAmount,
       yookassaPaymentId: workshopLeads.yookassaPaymentId,
       paymentConfirmationUrl: workshopLeads.paymentConfirmationUrl,
     }).from(workshopLeads).where(and(
@@ -93,7 +98,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ redirectUrl: lead.paymentConfirmationUrl }, { headers: jsonHeaders })
     }
 
-    const payment = await createYooKassaPayment({ leadId: lead.id, checkoutKey, phone: lead.phone })
+    const leadPrice = lead.paymentAmount ?? price
+    if (lead.paymentAmount === null) {
+      await db.update(workshopLeads).set({ paymentAmount: leadPrice }).where(eq(workshopLeads.id, lead.id))
+    }
+    const payment = await createYooKassaPayment({ leadId: lead.id, checkoutKey, phone: lead.phone, price: leadPrice })
     const confirmationUrl = payment.confirmation?.confirmation_url
 
     if (!payment.id || payment.status !== 'pending' || !isYooKassaCheckoutUrl(confirmationUrl)) {

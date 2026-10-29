@@ -5,6 +5,7 @@ import { useRef, useState } from "react"
 
 type CaptureFormProps = {
   mode?: "guide" | "masterclass"
+  price?: string
 }
 
 const fields = [
@@ -13,12 +14,22 @@ const fields = [
   { id: "telegram", label: "Ник в Telegram", placeholder: "@username", type: "text", autoComplete: "off", required: false },
 ] as const
 
-export function CaptureForm({ mode = "guide" }: CaptureFormProps) {
+export function CaptureForm({ mode = "guide", price = "9 990" }: CaptureFormProps) {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const checkoutKey = useRef<string | null>(null)
+  const botClickKey = useRef<string | null>(null)
   const isMasterclass = mode === "masterclass"
+
+  function trackBotClick() {
+    if (!botClickKey.current) return
+    const body = JSON.stringify({ key: botClickKey.current })
+    // sendBeacon survives the tab switch to Telegram; fetch with keepalive is the fallback.
+    if (!navigator.sendBeacon?.("/api/leads/bot-click", new Blob([body], { type: "application/json" }))) {
+      fetch("/api/leads/bot-click", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {})
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -57,6 +68,7 @@ export function CaptureForm({ mode = "guide" }: CaptureFormProps) {
         window.location.assign(result.redirectUrl)
         return
       }
+      botClickKey.current = typeof result?.botClickKey === "string" ? result.botClickKey : null
       setSubmitted(true)
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : "Не удалось отправить заявку. Попробуйте ещё раз.")
@@ -84,6 +96,7 @@ export function CaptureForm({ mode = "guide" }: CaptureFormProps) {
             href="https://t.me/belyaev_negotiyations_bot"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={trackBotClick}
             className="mt-6 inline-flex h-14 w-full items-center justify-center rounded-xl bg-yellow-400 text-base font-black uppercase tracking-wide text-black transition-colors hover:bg-yellow-300"
           >
             Перейти в Telegram-бота
@@ -166,7 +179,7 @@ export function CaptureForm({ mode = "guide" }: CaptureFormProps) {
         disabled={submitting}
         className="mt-1 h-14 w-full rounded-xl bg-yellow-400 text-base font-black uppercase tracking-wide text-black transition-colors hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? (isMasterclass ? "Переход к оплате..." : "Отправка...") : isMasterclass ? "Оплатить через СБП — 9 990 рублей" : "Забрать гайд в Telegram"}
+        {submitting ? (isMasterclass ? "Переход к оплате..." : "Отправка...") : isMasterclass ? `Оплатить через СБП — ${price} рублей` : "Забрать гайд в Telegram"}
       </button>
     </form>
   )

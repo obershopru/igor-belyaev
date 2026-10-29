@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { workshopLeads } from '@/lib/db/schema'
@@ -66,15 +67,17 @@ export async function POST(request: Request) {
   }
 
   try {
+    const botClickKey = source === 'guide' ? randomUUID() : null
     await getDb().insert(workshopLeads).values({
       name,
       phone,
       telegram,
       source,
       consentAt: new Date(),
+      botClickKey,
     })
 
-    return NextResponse.json({ ok: true }, { status: 201, headers: jsonHeaders })
+    return NextResponse.json({ ok: true, botClickKey }, { status: 201, headers: jsonHeaders })
   } catch {
     return NextResponse.json({ error: 'Не удалось сохранить заявку. Попробуйте ещё раз.' }, { status: 500, headers: jsonHeaders })
   }

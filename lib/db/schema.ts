@@ -1,4 +1,4 @@
-import { bigint, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { bigint, integer, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
 export const workshopLeads = pgTable('workshop_leads', {
   id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
@@ -15,6 +15,9 @@ export const workshopLeads = pgTable('workshop_leads', {
   salebotNotificationStatus: text('salebot_notification_status'),
   salebotNotificationUpdatedAt: timestamp('salebot_notification_updated_at', { withTimezone: true }),
   salebotClientId: text('salebot_client_id'),
+  paymentAmount: integer('payment_amount'),
+  botClickKey: text('bot_click_key'),
+  botClickedAt: timestamp('bot_clicked_at', { withTimezone: true }),
 })
 
 export const siteSettings = pgTable('site_settings', {
@@ -27,7 +30,7 @@ export type WorkshopLead = typeof workshopLeads.$inferSelect
 export type NewWorkshopLead = typeof workshopLeads.$inferInsert
 export type SiteSetting = typeof siteSettings.$inferSelect
 
-export type SiteSettingKey = 'site_content' | 'analytics_settings'
+export type SiteSettingKey = 'site_content' | 'analytics_settings' | 'masterclass'
 
 export const defaultSettingKeys: SiteSettingKey[] = ['site_content', 'analytics_settings']
 
@@ -41,4 +44,5 @@ export type SiteSettingsValue = Record<string, unknown>
 export const siteSettingsKeys = {
   content: 'site_content',
   analytics: 'analytics_settings',
+  masterclass: 'masterclass',
 } as const
