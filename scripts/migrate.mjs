@@ -7,6 +7,11 @@ const statements = [
   `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS bot_clicked_at timestamptz`,
   `CREATE UNIQUE INDEX IF NOT EXISTS workshop_leads_bot_click_key_idx ON workshop_leads (bot_click_key)`,
   `CREATE INDEX IF NOT EXISTS workshop_leads_created_at_idx ON workshop_leads (created_at)`,
+  `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_source text`,
+  `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_medium text`,
+  `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_campaign text`,
+  `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_content text`,
+  `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_term text`,
 ]
 
 if (!process.env.DATABASE_URL) {

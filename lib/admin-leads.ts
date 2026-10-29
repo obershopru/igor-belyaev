@@ -1,4 +1,6 @@
-export type AdminLead = {
+import { type UtmColumns, type UtmKey, UTM_KEYS, utmColumnByKey } from './utm'
+
+export type AdminLead = UtmColumns & {
   id: number
   createdAt: string
   source: string
@@ -20,10 +22,14 @@ export type LeadFilters = {
   to: string
   source: SourceFilter
   status: StatusFilter
+  utmSource: string
   query: string
 }
 
 const DEFAULT_PRICE = 9990
+
+// Filter/group value for leads that arrived without UTM tags.
+export const NO_UTM = '(без метки)'
 const TIME_ZONE = 'Europe/Moscow'
 
 export const sourceLabels: Record<string, string> = {
@@ -99,6 +105,14 @@ function matchesStatus(lead: AdminLead, status: StatusFilter) {
   }
 }
 
+export function utmValue(lead: AdminLead, key: UtmKey) {
+  return lead[utmColumnByKey[key]] ?? NO_UTM
+}
+
+export function hasUtm(lead: AdminLead) {
+  return UTM_KEYS.some((key) => lead[utmColumnByKey[key]] !== null)
+}
+
 function matchesQuery(lead: AdminLead, query: string) {
   const needle = query.trim().toLowerCase()
   if (!needle) return true
@@ -106,6 +120,7 @@ function matchesQuery(lead: AdminLead, query: string) {
   return lead.name.toLowerCase().includes(needle)
     || lead.telegram.toLowerCase().includes(needle.replace(/^@/, ''))
     || (digits.length >= 3 && lead.phone.replace(/\D/g, '').includes(digits))
+    || UTM_KEYS.some((key) => lead[utmColumnByKey[key]]?.toLowerCase().includes(needle))
 }
 
 export function filterLeads(leads: AdminLead[], filters: LeadFilters) {
@@ -113,6 +128,7 @@ export function filterLeads(leads: AdminLead[], filters: LeadFilters) {
     inPeriod(lead, filters.from, filters.to)
     && (filters.source === 'all' || lead.source === filters.source)
     && matchesStatus(lead, filters.status)
+    && (!filters.utmSource || utmValue(lead, 'utm_source') === filters.utmSource)
     && matchesQuery(lead, filters.query),
   )
 }
@@ -132,6 +148,25 @@ export function summarize(leads: AdminLead[]) {
     paid: paid.length,
     revenue: paid.reduce((sum, lead) => sum + leadAmount(lead), 0),
   }
+}
+
+export type UtmGroup = { value: string; leads: number; guide: number; clicked: number; masterclass: number; paid: number; revenue: number }
+
+// Leads per value of one UTM tag, busiest first, so the admin sees which ads bring registrations and payments.
+export function groupByUtm(leads: AdminLead[], key: UtmKey): UtmGroup[] {
+  const groups = new Map<string, AdminLead[]>()
+  for (const lead of leads) {
+    const value = utmValue(lead, key)
+    groups.set(value, [...(groups.get(value) ?? []), lead])
+  }
+  return [...groups].map(([value, items]) => {
+    const stats = summarize(items)
+    return { value, leads: items.length, guide: stats.guide, clicked: stats.clicked, masterclass: stats.masterclass, paid: stats.paid, revenue: stats.revenue }
+  }).sort((a, b) => b.leads - a.leads)
+}
+
+export function utmSources(leads: AdminLead[]) {
+  return [...new Set(leads.map((lead) => utmValue(lead, 'utm_source')))].sort((a, b) => a === NO_UTM ? 1 : b === NO_UTM ? -1 : a.localeCompare(b))
 }
 
 export function percent(part: number, total: number) {
@@ -155,7 +190,7 @@ function telegramCell(telegram: string) {
 
 // Semicolon separator and BOM so Russian-locale Excel opens the file with correct columns and Cyrillic.
 export function leadsToCsv(leads: AdminLead[]) {
-  const header = ['Дата', 'Тип', 'Имя', 'Телефон', 'Telegram', 'Переход в бота', 'Оплата', 'Сумма', 'Salebot'].map(csvCell)
+  const header = ['Дата', 'Тип', 'Имя', 'Телефон', 'Telegram', 'Переход в бота', 'Оплата', 'Сумма', 'Salebot', ...UTM_KEYS].map(csvCell)
   const rows = leads.map((lead) => [
     csvCell(formatDateTime(lead.createdAt)),
     csvCell(sourceLabels[lead.source] ?? lead.source),
@@ -166,6 +201,7 @@ export function leadsToCsv(leads: AdminLead[]) {
     csvCell(lead.source === 'masterclass' ? paymentLabels[lead.paymentStatus ?? ''] ?? '—' : '—'),
     csvCell(lead.source === 'masterclass' ? leadAmount(lead) : ''),
     csvCell(lead.source === 'masterclass' ? salebotLabels[lead.salebotNotificationStatus ?? ''] ?? '—' : '—'),
+    ...UTM_KEYS.map((key) => csvCell(lead[utmColumnByKey[key]])),
   ])
   return `﻿${[header, ...rows].map((row) => row.join(';')).join('\r\n')}`
 }

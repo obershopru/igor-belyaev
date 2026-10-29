@@ -18,6 +18,11 @@ export const workshopLeads = pgTable('workshop_leads', {
   paymentAmount: integer('payment_amount'),
   botClickKey: text('bot_click_key'),
   botClickedAt: timestamp('bot_clicked_at', { withTimezone: true }),
+  utmSource: text('utm_source'),
+  utmMedium: text('utm_medium'),
+  utmCampaign: text('utm_campaign'),
+  utmContent: text('utm_content'),
+  utmTerm: text('utm_term'),
 })
 
 export const siteSettings = pgTable('site_settings', {

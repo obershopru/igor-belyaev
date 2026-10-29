@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { workshopLeads } from '@/lib/db/schema'
+import { parseUtm } from '@/lib/utm'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
       source,
       consentAt: new Date(),
       botClickKey,
+      ...parseUtm(values.utm),
     })
 
     return NextResponse.json({ ok: true, botClickKey }, { status: 201, headers: jsonHeaders })

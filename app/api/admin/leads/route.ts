@@ -26,6 +26,11 @@ export async function GET(request: Request) {
         paymentStatus: workshopLeads.paymentStatus,
         paymentAmount: workshopLeads.paymentAmount,
         salebotNotificationStatus: workshopLeads.salebotNotificationStatus,
+        utmSource: workshopLeads.utmSource,
+        utmMedium: workshopLeads.utmMedium,
+        utmCampaign: workshopLeads.utmCampaign,
+        utmContent: workshopLeads.utmContent,
+        utmTerm: workshopLeads.utmTerm,
       })
       .from(workshopLeads)
       .orderBy(desc(workshopLeads.createdAt))

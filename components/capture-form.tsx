@@ -1,7 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { currentUtm, rememberUtm } from "@/lib/utm"
 
 type CaptureFormProps = {
   mode?: "guide" | "masterclass"
@@ -21,6 +22,10 @@ export function CaptureForm({ mode = "guide", price = "9 990" }: CaptureFormProp
   const checkoutKey = useRef<string | null>(null)
   const botClickKey = useRef<string | null>(null)
   const isMasterclass = mode === "masterclass"
+
+  useEffect(() => {
+    rememberUtm()
+  }, [])
 
   function trackBotClick() {
     if (!botClickKey.current) return
@@ -43,6 +48,7 @@ export function CaptureForm({ mode = "guide", price = "9 990" }: CaptureFormProp
       telegram: String(data.get("telegram") ?? ""),
       consent: data.get("consent") === "on",
       source: mode,
+      utm: currentUtm(),
       ...(isMasterclass
         ? { salebotClientId: new URLSearchParams(window.location.search).get("salebot_client_id") ?? "" }
         : {}),

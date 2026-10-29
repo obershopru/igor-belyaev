@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { workshopLeads } from '@/lib/db/schema'
 import { readMasterclassSettings } from '@/lib/masterclass'
+import { parseUtm } from '@/lib/utm'
 import { createYooKassaPayment, getYooKassaConfig, isYooKassaCheckoutUrl } from '@/lib/yookassa'
 
 export const runtime = 'nodejs'
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
       checkoutKey,
       paymentStatus: 'pending',
       paymentAmount: price,
+      ...parseUtm(values.utm),
     }).onConflictDoNothing().returning({
       id: workshopLeads.id,
       phone: workshopLeads.phone,
