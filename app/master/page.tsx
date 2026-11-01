@@ -1,12 +1,22 @@
 import type { Metadata } from "next"
 import { Banknote, Ban, Gauge, Users } from "lucide-react"
 import { CaptureForm } from "@/components/capture-form"
+import { JsonLd } from "@/components/json-ld"
 import { WorkshopCases } from "@/components/workshop-cases"
 import { formatPrice, getMasterclassSettings } from "@/lib/masterclass"
+import { PERSON_ID, absoluteUrl, breadcrumbSchema, graph, moscowIso, parseRussianEventDate, personSchema } from "@/lib/seo"
 
 export const metadata: Metadata = {
   title: "Мастер-класс по переговорам — Игорь Беляев",
   description: "Практический онлайн-мастер-класс Игоря Беляева о сложных переговорах, давлении и защите своей позиции.",
+  alternates: { canonical: "/master" },
+  openGraph: {
+    type: "website",
+    url: "/master",
+    title: "Мастер-класс «Уступить нельзя договориться» — Игорь Беляев",
+    description: "Практический онлайн-мастер-класс Игоря Беляева о сложных переговорах, давлении и защите своей позиции.",
+    images: ["/expert-mk-hero.jpg"],
+  },
 }
 
 // The admin panel revalidates this page on save; the interval is a fallback.
@@ -65,8 +75,49 @@ export default async function MasterPage() {
     { label: "Стоимость участия", value: `${price} ₽` },
   ]
 
+  const startDate = parseRussianEventDate(settings.date)
+  const structuredData = graph(
+    ...(startDate
+      ? [{
+          "@type": "Event",
+          "@id": absoluteUrl("/master#event"),
+          name: "Мастер-класс «Уступить нельзя договориться»",
+          description: program.map((item) => item.text).join(" "),
+          startDate: moscowIso(startDate),
+          eventStatus: "https://schema.org/EventScheduled",
+          eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+          location: { "@type": "VirtualLocation", url: absoluteUrl("/master") },
+          image: [absoluteUrl("/expert-mk-hero.jpg")],
+          inLanguage: "ru-RU",
+          organizer: { "@id": PERSON_ID },
+          performer: { "@id": PERSON_ID },
+          offers: {
+            "@type": "Offer",
+            url: absoluteUrl("/master"),
+            price: settings.price,
+            priceCurrency: "RUB",
+            availability: "https://schema.org/InStock",
+          },
+        }]
+      : []),
+    {
+      "@type": "FAQPage",
+      mainEntity: faq.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    },
+    breadcrumbSchema([
+      { name: "Главная", path: "/" },
+      { name: "Мастер-класс", path: "/master" },
+    ]),
+    personSchema(),
+  )
+
   return (
     <main className="min-h-dvh bg-black font-sans text-white">
+      <JsonLd data={structuredData} />
       <section className="grid grid-cols-1 items-stretch lg:grid-cols-[1.1fr_0.9fr]">
         <div className="flex flex-col justify-between gap-10 px-5 py-10 md:px-10 md:py-14">
           <div>

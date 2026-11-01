@@ -15,7 +15,7 @@ export async function getPostById(id: number) {
   return post ?? null
 }
 
-export type PublishedPostSummary = Pick<BlogPost, 'slug' | 'title' | 'excerpt' | 'coverUrl' | 'publishedAt'>
+export type PublishedPostSummary = Pick<BlogPost, 'slug' | 'title' | 'excerpt' | 'coverUrl' | 'publishedAt' | 'updatedAt'>
 
 // Public pages fall back to an empty blog when the database is unavailable, like the masterclass page does.
 export async function getPublishedPosts(): Promise<PublishedPostSummary[]> {
@@ -28,10 +28,21 @@ export async function getPublishedPosts(): Promise<PublishedPostSummary[]> {
         excerpt: blogPosts.excerpt,
         coverUrl: blogPosts.coverUrl,
         publishedAt: blogPosts.publishedAt,
+        updatedAt: blogPosts.updatedAt,
       })
       .from(blogPosts)
       .where(eq(blogPosts.status, 'published'))
       .orderBy(desc(blogPosts.publishedAt))
+  } catch {
+    return []
+  }
+}
+
+// Full texts for llms-full.txt and the RSS feed.
+export async function getPublishedPostsWithBody(): Promise<BlogPost[]> {
+  if (!process.env.DATABASE_URL) return []
+  try {
+    return await getDb().select().from(blogPosts).where(eq(blogPosts.status, 'published')).orderBy(desc(blogPosts.publishedAt))
   } catch {
     return []
   }
@@ -51,9 +62,13 @@ export async function getPublishedPost(slug: string) {
   }
 }
 
+// Machine-readable feeds list the posts too, so they are refreshed together with the pages.
+const BLOG_FEEDS = ['/sitemap.xml', '/llms.txt', '/llms-full.txt', '/blog/rss.xml']
+
 export function revalidateBlog(...slugs: string[]) {
   revalidatePath('/blog')
   for (const slug of new Set(slugs)) revalidatePath(`/blog/${slug}`)
+  for (const feed of BLOG_FEEDS) revalidatePath(feed)
 }
 
 export function parsePostId(value: string) {

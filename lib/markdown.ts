@@ -1,3 +1,5 @@
+import { slugify } from '@/lib/blog-workflow'
+
 // Minimal Markdown for blog posts: headings, paragraphs, lists, quotes, images, links, bold, italic, code.
 // Raw HTML is always escaped, so an article cannot inject scripts into the site.
 
@@ -45,8 +47,40 @@ function renderInline(escaped: string) {
 
 type Block = { type: 'p' | 'quote' | 'ul' | 'ol'; lines: string[] }
 
+function plainText(html: string) {
+  return html.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+}
+
+// Section anchors let search and AI engines link straight to the part of the article they quote.
+function createAnchors() {
+  const used = new Map<string, number>()
+  return {
+    next(innerHtml: string) {
+      const base = slugify(plainText(innerHtml)) || 'razdel'
+      const count = used.get(base) ?? 0
+      used.set(base, count + 1)
+      return count ? `${base}-${count + 1}` : base
+    },
+  }
+}
+
+export function extractHeadings(source: string) {
+  const anchors = createAnchors()
+  const headings: { id: string; text: string; level: 2 | 3 }[] = []
+  for (const line of escapeHtml(source.replace(/\r\n/g, '\n')).split('\n')) {
+    const match = line.trim().match(/^(#{1,6})\s+(.+)$/)
+    if (!match) continue
+    const level = Math.min(Math.max(match[1].length, 2), 4)
+    if (level > 3) continue
+    const inner = renderInline(match[2])
+    headings.push({ id: anchors.next(inner), text: plainText(inner), level: level as 2 | 3 })
+  }
+  return headings
+}
+
 export function renderMarkdown(source: string) {
   const html: string[] = []
+  const anchors = createAnchors()
   let block: Block | null = null
 
   const flush = () => {
@@ -78,7 +112,9 @@ export function renderMarkdown(source: string) {
       flush()
       // The post title is the page's h1, so headings in the body start at h2.
       const level = Math.min(Math.max(match[1].length, 2), 4)
-      html.push(`<h${level}>${renderInline(match[2])}</h${level}>`)
+      const inner = renderInline(match[2])
+      const id = level <= 3 ? anchors.next(inner) : null
+      html.push(id ? `<h${level} id="${id}">${inner}</h${level}>` : `<h${level}>${inner}</h${level}>`)
     } else if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
       flush()
       html.push('<hr />')
@@ -104,6 +140,9 @@ export function renderMarkdown(source: string) {
 }
 
 export function estimateReadingMinutes(source: string) {
-  const words = source.split(/\s+/).filter(Boolean).length
-  return Math.max(1, Math.round(words / 180))
+  return Math.max(1, Math.round(countWords(source) / 180))
+}
+
+export function countWords(source: string) {
+  return source.replace(/!\[[^\]]*\]\([^)]*\)/g, '').split(/\s+/).filter(Boolean).length
 }

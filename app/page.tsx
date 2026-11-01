@@ -1,5 +1,12 @@
+import type { Metadata } from "next"
 import Image from "next/image"
 import { CaptureForm } from "@/components/capture-form"
+import { JsonLd } from "@/components/json-ld"
+import { graph, personSchema, websiteSchema } from "@/lib/seo"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+}
 
 const points = [
   "как гендер влияет на жёсткость, риск и реакцию собеседника;",
@@ -11,6 +18,7 @@ const points = [
 export default function Page() {
   return (
     <main className="min-h-dvh bg-black font-sans text-white">
+      <JsonLd data={graph(websiteSchema(), personSchema())} />
       {/* Hero: headline (left) + photo (right on desktop) */}
       <section className="grid grid-cols-1 items-center gap-8 px-5 py-10 md:px-10 md:py-14 lg:grid-cols-[1fr_0.85fr] lg:gap-12">
         <div>

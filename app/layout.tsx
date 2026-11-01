@@ -2,16 +2,21 @@ import { Analytics } from '@vercel/analytics/next'
 import Script from 'next/script'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { SITE_NAME, SITE_URL } from '@/lib/seo'
 import './globals.css'
 
 const geistSans = Geist({ subsets: ['latin', 'cyrillic'], variable: '--font-geist-sans' })
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'Игорь Беляев — Гайд по переговорам',
   description:
     'Заберите бесплатный гайд по переговорам и используйте его как короткую шпаргалку перед важным разговором.',
-  generator: 'v0.app',
+  applicationName: SITE_NAME,
+  authors: [{ name: 'Игорь Беляев', url: SITE_URL }],
+  alternates: { types: { 'application/rss+xml': [{ url: '/blog/rss.xml', title: 'Блог Игоря Беляева' }] } },
+  openGraph: { type: 'website', locale: 'ru_RU', siteName: SITE_NAME, images: ['/expert.jpg'] },
   icons: {
     icon: [
       {
