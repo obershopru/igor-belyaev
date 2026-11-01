@@ -2,19 +2,23 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { BlogPanel } from "@/components/admin/blog-panel"
 import { LeadsPanel } from "@/components/admin/leads-panel"
 import { MasterclassPanel } from "@/components/admin/masterclass-panel"
+import type { StaffRole } from "@/lib/admin-auth"
 
-const tabs = [
-  { id: "leads", label: "Заявки" },
-  { id: "masterclass", label: "Мастер-класс" },
+const allTabs = [
+  { id: "leads", label: "Заявки", roles: ["admin"] },
+  { id: "masterclass", label: "Мастер-класс", roles: ["admin"] },
+  { id: "blog", label: "Блог", roles: ["admin", "editor"] },
 ] as const
 
-type TabId = (typeof tabs)[number]["id"]
+type TabId = (typeof allTabs)[number]["id"]
 
-export function AdminDashboard() {
+export function AdminDashboard({ role }: { role: StaffRole }) {
   const router = useRouter()
-  const [tab, setTab] = useState<TabId>("leads")
+  const tabs = allTabs.filter((item) => (item.roles as readonly StaffRole[]).includes(role))
+  const [tab, setTab] = useState<TabId>(tabs[0].id)
 
   async function logout() {
     await fetch("/api/admin/logout", { method: "POST" }).catch(() => {})
@@ -26,10 +30,12 @@ export function AdminDashboard() {
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-yellow-400">Игорь Беляев</p>
-          <h1 className="mt-2 text-2xl font-black uppercase leading-none tracking-tight md:text-3xl">Админ-панель</h1>
+          <h1 className="mt-2 text-2xl font-black uppercase leading-none tracking-tight md:text-3xl">
+            {role === "editor" ? "Редакция блога" : "Админ-панель"}
+          </h1>
         </div>
         <div className="flex items-center gap-3">
-          <a href="/master" target="_blank" rel="noopener noreferrer" className="text-sm text-zinc-400 transition-colors hover:text-yellow-400">
+          <a href={role === "editor" ? "/blog" : "/master"} target="_blank" rel="noopener noreferrer" className="text-sm text-zinc-400 transition-colors hover:text-yellow-400">
             Открыть сайт
           </a>
           <button
@@ -42,24 +48,28 @@ export function AdminDashboard() {
         </div>
       </header>
 
-      <nav className="flex gap-2" role="tablist" aria-label="Разделы">
-        {tabs.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            onClick={() => setTab(item.id)}
-            className={`h-10 rounded-full px-5 text-sm font-bold transition-colors ${
-              tab === item.id ? "bg-yellow-400 text-black" : "bg-zinc-950 text-zinc-400 hover:text-white"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
+      {tabs.length > 1 && (
+        <nav className="flex gap-2" role="tablist" aria-label="Разделы">
+          {tabs.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === item.id}
+              onClick={() => setTab(item.id)}
+              className={`h-10 rounded-full px-5 text-sm font-bold transition-colors ${
+                tab === item.id ? "bg-yellow-400 text-black" : "bg-zinc-950 text-zinc-400 hover:text-white"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      )}
 
-      {tab === "leads" ? <LeadsPanel /> : <MasterclassPanel />}
+      {tab === "leads" && <LeadsPanel />}
+      {tab === "masterclass" && <MasterclassPanel />}
+      {tab === "blog" && <BlogPanel role={role} />}
     </div>
   )
 }

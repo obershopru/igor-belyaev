@@ -12,6 +12,32 @@ const statements = [
   `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_campaign text`,
   `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_content text`,
   `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_term text`,
+  `CREATE TABLE IF NOT EXISTS blog_posts (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    slug text NOT NULL,
+    title text NOT NULL,
+    excerpt text NOT NULL DEFAULT '',
+    cover_url text,
+    body text NOT NULL DEFAULT '',
+    status text NOT NULL DEFAULT 'draft',
+    review_comment text,
+    created_by text NOT NULL,
+    updated_by text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    submitted_at timestamptz,
+    published_at timestamptz
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS blog_posts_slug_idx ON blog_posts (slug)`,
+  `CREATE INDEX IF NOT EXISTS blog_posts_status_published_idx ON blog_posts (status, published_at)`,
+  `CREATE TABLE IF NOT EXISTS blog_media (
+    id text PRIMARY KEY,
+    content_type text NOT NULL,
+    data bytea NOT NULL,
+    size integer NOT NULL,
+    uploaded_by text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`,
 ]
 
 if (!process.env.DATABASE_URL) {

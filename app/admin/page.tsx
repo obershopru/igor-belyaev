@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { cookies } from "next/headers"
 import { AdminDashboard } from "@/components/admin/admin-dashboard"
 import { AdminLogin } from "@/components/admin/admin-login"
-import { COOKIE_NAME, isAdminConfigured, isAdminToken } from "@/lib/admin-auth"
+import { COOKIE_NAME, getTokenRole, isAdminConfigured } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -13,11 +13,11 @@ export const metadata: Metadata = {
 
 export default async function AdminPage() {
   const token = (await cookies()).get(COOKIE_NAME)?.value
-  const authorized = isAdminToken(token)
+  const role = getTokenRole(token)
 
   return (
     <main className="min-h-dvh bg-black font-sans text-white [color-scheme:dark]">
-      {authorized ? <AdminDashboard /> : <AdminLogin configured={isAdminConfigured()} />}
+      {role ? <AdminDashboard role={role} /> : <AdminLogin configured={isAdminConfigured()} />}
     </main>
   )
 }

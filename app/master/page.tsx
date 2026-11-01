@@ -198,6 +198,7 @@ export default async function MasterPage() {
             <span>ИНН 668601656614</span>
           </div>
           <nav className="flex flex-col gap-2 md:items-end" aria-label="Юридические документы">
+            <a href="/blog" className="transition-colors hover:text-yellow-400">Блог</a>
             <a href="https://drive.google.com/file/d/1LOpqvvGNEhEtwlEIWB1EnyHHMAuv3x9U/view" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-yellow-400">Политика обработки персональных данных</a>
             <a href="https://drive.google.com/file/d/1jVXxlq3I9YIp5UgCUHGxiylBgfazeBrm/view" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-yellow-400">Согласие на обработку персональных данных</a>
             <a href="https://drive.google.com/file/d/1ib1Cg-8_3euQHmsiZsXdpIXYfyX0TMv1/view" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-yellow-400">Публичная оферта</a>

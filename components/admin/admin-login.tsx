@@ -53,7 +53,7 @@ export function AdminLogin({ configured }: { configured: boolean }) {
             id="admin-username"
             name="username"
             autoComplete="username"
-            defaultValue="admin"
+            autoFocus
             required
             className="h-12 w-full rounded-xl border border-zinc-800 bg-black px-4 text-white outline-none transition-colors focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
           />
@@ -68,7 +68,6 @@ export function AdminLogin({ configured }: { configured: boolean }) {
             type="password"
             autoComplete="current-password"
             required
-            autoFocus
             className="h-12 w-full rounded-xl border border-zinc-800 bg-black px-4 text-white outline-none transition-colors focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
           />
         </div>

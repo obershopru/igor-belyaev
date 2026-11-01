@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import {
   adminError,
-  createAdminSession,
+  createStaffSession,
   hasSameOrigin,
   isAdminConfigured,
   setAdminCookie,
-  verifyAdminCredentials,
+  verifyStaffCredentials,
 } from '@/lib/admin-auth'
 
 export const runtime = 'nodejs'
@@ -48,13 +48,14 @@ export async function POST(request: Request) {
   }
 
   const values = body && typeof body === 'object' ? body as Record<string, unknown> : {}
-  if (!verifyAdminCredentials(values.username, values.password)) {
+  const role = verifyStaffCredentials(values.username, values.password)
+  if (!role) {
     recordFailure(ip)
     return adminError('Неверный логин или пароль.', 401)
   }
 
   attempts.delete(ip)
-  const { token, maxAge } = createAdminSession()
+  const { token, maxAge } = createStaffSession(role)
   const response = NextResponse.json({ ok: true }, { headers: { 'Cache-Control': 'no-store, private' } })
   setAdminCookie(response, token, maxAge)
   return response
