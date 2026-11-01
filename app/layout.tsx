@@ -3,6 +3,7 @@ import Script from 'next/script'
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { SITE_NAME, SITE_URL } from '@/lib/seo'
+import { MetrikaHits } from '@/components/metrika-hits'
 import './globals.css'
 
 const geistSans = Geist({ subsets: ['latin', 'cyrillic'], variable: '--font-geist-sans' })
@@ -64,6 +65,7 @@ export default function RootLayout({
             className="sr-only"
           />
         </noscript>
+        <MetrikaHits />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
