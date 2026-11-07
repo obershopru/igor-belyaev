@@ -244,8 +244,9 @@ export default async function MasterPage() {
       <footer className="px-5 py-8 text-xs text-zinc-500 md:px-10">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col gap-1">
-            <span className="font-black uppercase tracking-[0.2em] text-zinc-300">Контактное лицо</span>
-            <span>Чалунин Максим Александрович</span>
+            <span className="font-black uppercase tracking-[0.2em] text-zinc-300">Продавец</span>
+            <span>ИП Чалунин Максим Александрович</span>
+            <span>ОГРНИП 326965800233302</span>
             <span>ИНН 668601656614</span>
           </div>
           <nav className="flex flex-col gap-2 md:items-end" aria-label="Юридические документы">
