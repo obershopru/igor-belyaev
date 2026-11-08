@@ -9,6 +9,8 @@ type CaptureFormProps = {
   price?: string
   /** Masterclass only: false saves a plain request instead of opening the payment page. */
   payment?: boolean
+  /** Which page's settings (and price) the payment uses. */
+  page?: "master" | "master1"
 }
 
 const fields = [
@@ -17,7 +19,7 @@ const fields = [
   { id: "telegram", label: "Ник в Telegram", placeholder: "@username", type: "text", autoComplete: "off", required: false },
 ] as const
 
-export function CaptureForm({ mode = "guide", price = "9 990", payment = true }: CaptureFormProps) {
+export function CaptureForm({ mode = "guide", price = "9 990", payment = true, page = "master" }: CaptureFormProps) {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +55,7 @@ export function CaptureForm({ mode = "guide", price = "9 990", payment = true }:
       source: mode,
       utm: currentUtm(),
       ...(isCheckout
-        ? { salebotClientId: new URLSearchParams(window.location.search).get("salebot_client_id") ?? "" }
+        ? { page, salebotClientId: new URLSearchParams(window.location.search).get("salebot_client_id") ?? "" }
         : {}),
     }
 

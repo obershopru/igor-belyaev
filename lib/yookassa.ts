@@ -63,11 +63,13 @@ export async function createYooKassaPayment({
   checkoutKey,
   phone,
   price,
+  page = 'master',
 }: {
   leadId: number
   checkoutKey: string
   phone: string
   price: number
+  page?: 'master' | 'master1'
 }) {
   const config = getYooKassaConfig()
   if (!config) throw new Error('YooKassa is not configured')
@@ -82,7 +84,7 @@ export async function createYooKassaPayment({
       capture: true,
       confirmation: {
         type: 'redirect',
-        return_url: `${config.siteUrl}/master/payment?checkout_key=${encodeURIComponent(checkoutKey)}`,
+        return_url: `${config.siteUrl}/master/payment?checkout_key=${encodeURIComponent(checkoutKey)}&page=${page}`,
       },
       description: MASTERCLASS_DESCRIPTION,
       metadata: { lead_id: String(leadId), checkout_key: checkoutKey },

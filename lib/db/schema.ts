@@ -69,7 +69,7 @@ export type WorkshopLead = typeof workshopLeads.$inferSelect
 export type NewWorkshopLead = typeof workshopLeads.$inferInsert
 export type SiteSetting = typeof siteSettings.$inferSelect
 
-export type SiteSettingKey = 'site_content' | 'analytics_settings' | 'masterclass'
+export type SiteSettingKey = 'site_content' | 'analytics_settings' | 'masterclass' | 'masterclass_copy'
 
 export const defaultSettingKeys: SiteSettingKey[] = ['site_content', 'analytics_settings']
 
@@ -84,4 +84,5 @@ export const siteSettingsKeys = {
   content: 'site_content',
   analytics: 'analytics_settings',
   masterclass: 'masterclass',
+  masterclassCopy: 'masterclass_copy',
 } as const

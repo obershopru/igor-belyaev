@@ -8,7 +8,8 @@ type Settings = { date: string; duration: string; price: number }
 const inputClass = "h-12 w-full rounded-xl border border-zinc-800 bg-black px-4 text-white outline-none transition-colors focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
 const labelClass = "mb-1.5 block text-[11px] font-extrabold uppercase tracking-[0.08em] text-zinc-400"
 
-export function MasterclassPanel() {
+export function MasterclassPanel({ page = "master" }: { page?: "master" | "master1" }) {
+  const endpoint = `/api/admin/masterclass?page=${page}`
   const [settings, setSettings] = useState<Settings | null>(null)
   const [saved, setSaved] = useState<Settings | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -16,7 +17,7 @@ export function MasterclassPanel() {
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null)
 
   useEffect(() => {
-    fetch("/api/admin/masterclass")
+    fetch(endpoint)
       .then(async (response) => {
         const result = await response.json().catch(() => null)
         if (!response.ok) throw new Error(result?.error ?? "Не удалось загрузить настройки.")
@@ -24,7 +25,7 @@ export function MasterclassPanel() {
         setSaved(result.settings)
       })
       .catch((error) => setLoadError(error instanceof Error ? error.message : "Не удалось загрузить настройки."))
-  }, [])
+  }, [endpoint])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -33,7 +34,7 @@ export function MasterclassPanel() {
     setMessage(null)
 
     try {
-      const response = await fetch("/api/admin/masterclass", {
+      const response = await fetch(endpoint, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
@@ -42,7 +43,7 @@ export function MasterclassPanel() {
       if (!response.ok) throw new Error(result?.error ?? "Не удалось сохранить настройки.")
       setSettings(result.settings)
       setSaved(result.settings)
-      setMessage({ type: "ok", text: "Сохранено. Страница мастер-класса обновлена." })
+      setMessage({ type: "ok", text: `Сохранено. Страница /${page} обновлена.` })
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "Не удалось сохранить настройки." })
     } finally {
@@ -59,14 +60,15 @@ export function MasterclassPanel() {
   return (
     <form onSubmit={handleSubmit} className="grid max-w-3xl gap-6 rounded-2xl bg-zinc-950 p-6 md:grid-cols-2 md:p-8">
       <div className="md:col-span-2">
-        <h2 className="text-xl font-black uppercase tracking-tight">Параметры мастер-класса</h2>
-        <p className="mt-2 text-sm text-zinc-400">Изменения сразу появятся на странице /master и на кнопке оплаты.</p>
+        <h2 className="text-xl font-black uppercase tracking-tight">{page === "master1" ? "Мастер-класс 1 (копия)" : "Параметры мастер-класса"}</h2>
+        <p className="mt-2 text-sm text-zinc-400">Изменения сразу появятся на странице /{page} и на кнопке оплаты.{" "}
+          <a href={`/${page}`} target="_blank" rel="noopener noreferrer" className="text-zinc-200 underline hover:text-yellow-400">Открыть страницу</a></p>
       </div>
 
       <div className="md:col-span-2">
-        <label htmlFor="mc-date" className={labelClass}>Дата и время</label>
+        <label htmlFor={`mc-date-${page}`} className={labelClass}>Дата и время</label>
         <input
-          id="mc-date"
+          id={`mc-date-${page}`}
           value={settings.date}
           onChange={(event) => setSettings({ ...settings, date: event.target.value })}
           placeholder="9 ноября, 19:30"
@@ -77,9 +79,9 @@ export function MasterclassPanel() {
       </div>
 
       <div>
-        <label htmlFor="mc-duration" className={labelClass}>Длительность</label>
+        <label htmlFor={`mc-duration-${page}`} className={labelClass}>Длительность</label>
         <input
-          id="mc-duration"
+          id={`mc-duration-${page}`}
           value={settings.duration}
           onChange={(event) => setSettings({ ...settings, duration: event.target.value })}
           placeholder="2 часа"
@@ -90,9 +92,9 @@ export function MasterclassPanel() {
       </div>
 
       <div>
-        <label htmlFor="mc-price" className={labelClass}>Стоимость, ₽</label>
+        <label htmlFor={`mc-price-${page}`} className={labelClass}>Стоимость, ₽</label>
         <input
-          id="mc-price"
+          id={`mc-price-${page}`}
           type="number"
           inputMode="numeric"
           min={1}

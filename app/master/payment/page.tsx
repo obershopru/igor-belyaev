@@ -8,9 +8,10 @@ export const dynamic = 'force-dynamic'
 export default async function PaymentResultPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout_key?: string }>
+  searchParams: Promise<{ checkout_key?: string; page?: string }>
 }) {
-  const { checkout_key: checkoutKey } = await searchParams
+  const { checkout_key: checkoutKey, page } = await searchParams
+  const backPath = page === 'master1' ? '/master1' : '/master'
   const validKey = checkoutKey && /^[0-9a-f-]{36}$/i.test(checkoutKey)
   const [lead] = validKey && process.env.DATABASE_URL
     ? await getDb().select({ paymentStatus: workshopLeads.paymentStatus })
@@ -39,7 +40,7 @@ export default async function PaymentResultPage({
                 : 'Не удалось найти заявку по этой ссылке. Проверьте статус платежа в личном кабинете ЮKassa.'}
         </p>
         {!paid && (
-          <a href={`/master?retry=${randomUUID()}#participation`} className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl bg-yellow-400 px-6 font-bold text-black transition-colors hover:bg-yellow-300">
+          <a href={`${backPath}?retry=${randomUUID()}#participation`} className="mt-8 inline-flex min-h-12 items-center justify-center rounded-xl bg-yellow-400 px-6 font-bold text-black transition-colors hover:bg-yellow-300">
             {canceled ? 'Заполнить заявку заново' : 'Вернуться к мастер-классу'}
           </a>
         )}

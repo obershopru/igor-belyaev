@@ -1,6 +1,6 @@
 import { revalidatePath } from 'next/cache'
 import { adminError, adminResponse, checkAdminMutation, isAdminRequest, unauthorizedResponse } from '@/lib/admin-auth'
-import { isValidMasterclassSettings, readMasterclassSettings, saveMasterclassSettings } from '@/lib/masterclass'
+import { isValidMasterclassSettings, parseMasterclassPage, readMasterclassSettings, saveMasterclassSettings } from '@/lib/masterclass'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   if (!process.env.DATABASE_URL) return adminError('База данных не настроена.', 503)
 
   try {
-    return adminResponse({ settings: await readMasterclassSettings() })
+    const page = parseMasterclassPage(new URL(request.url).searchParams.get('page'))
+    return adminResponse({ settings: await readMasterclassSettings(page) })
   } catch {
     return adminError('Не удалось загрузить настройки.', 503)
   }
@@ -32,8 +33,9 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const settings = await saveMasterclassSettings(body)
-    revalidatePath('/master')
+    const page = parseMasterclassPage(new URL(request.url).searchParams.get('page'))
+    const settings = await saveMasterclassSettings(body, page)
+    revalidatePath(`/${page}`)
     return adminResponse({ settings })
   } catch {
     return adminError('Не удалось сохранить настройки.', 503)

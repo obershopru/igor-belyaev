@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { workshopLeads } from '@/lib/db/schema'
-import { readMasterclassSettings } from '@/lib/masterclass'
+import { parseMasterclassPage, readMasterclassSettings } from '@/lib/masterclass'
 import { parseUtm } from '@/lib/utm'
 import { createYooKassaPayment, getYooKassaConfig, isYooKassaCheckoutUrl } from '@/lib/yookassa'
 
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
   const telegram = typeof values.telegram === 'string' ? values.telegram.trim() : ''
   const salebotClientId = typeof values.salebotClientId === 'string' ? values.salebotClientId.trim() : ''
   const checkoutKey = typeof values.checkoutKey === 'string' ? values.checkoutKey : ''
+  const page = parseMasterclassPage(values.page)
   const phoneDigits = phone.replace(/\D/g, '')
 
   if (name.length < 2 || name.length > 120) return jsonError('Укажите имя длиной от 2 до 120 символов.', 400)
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
 
   try {
     const db = getDb()
-    const { price } = await readMasterclassSettings()
+    const { price } = await readMasterclassSettings(page)
     const [inserted] = await db.insert(workshopLeads).values({
       name,
       phone,
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
     if (!lead) return jsonError('Не удалось создать заявку. Попробуйте ещё раз.', 500)
 
     if (lead.paymentStatus === 'succeeded') {
-      return NextResponse.json({ redirectUrl: `${config.siteUrl}/master/payment?checkout_key=${encodeURIComponent(checkoutKey)}` }, { headers: jsonHeaders })
+      return NextResponse.json({ redirectUrl: `${config.siteUrl}/master/payment?checkout_key=${encodeURIComponent(checkoutKey)}&page=${page}` }, { headers: jsonHeaders })
     }
 
     if (lead.paymentConfirmationUrl && isYooKassaCheckoutUrl(lead.paymentConfirmationUrl)) {
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
     if (lead.paymentAmount === null) {
       await db.update(workshopLeads).set({ paymentAmount: leadPrice }).where(eq(workshopLeads.id, lead.id))
     }
-    const payment = await createYooKassaPayment({ leadId: lead.id, checkoutKey, phone: lead.phone, price: leadPrice })
+    const payment = await createYooKassaPayment({ leadId: lead.id, checkoutKey, phone: lead.phone, price: leadPrice, page })
     const confirmationUrl = payment.confirmation?.confirmation_url
 
     if (!payment.id || payment.status !== 'pending' || !isYooKassaCheckoutUrl(confirmationUrl)) {

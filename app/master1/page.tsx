@@ -3,7 +3,7 @@ import { Banknote, Ban, Gauge, Users } from "lucide-react"
 import { CaptureForm } from "@/components/capture-form"
 import { JsonLd } from "@/components/json-ld"
 import { WorkshopCases } from "@/components/workshop-cases"
-import { formatPrice } from "@/lib/masterclass"
+import { formatPrice, getMasterclassSettings } from "@/lib/masterclass"
 import { PERSON_ID, absoluteUrl, breadcrumbSchema, graph, moscowIso, parseRussianEventDate, personSchema } from "@/lib/seo"
 
 export const metadata: Metadata = {
@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   },
 }
 
-// Frozen snapshot of /master as of 2026-11-08: admin settings do not affect this page.
-const settings = { date: "9 ноября, 19:30", duration: "2 часа", price: 9990 }
+// Own settings, edited in the admin tab «Мастер-класс 1»; the admin panel revalidates on save.
+export const revalidate = 3600
 
 const program = [
   {
@@ -66,6 +66,7 @@ const faq = [
 const sectionTitle = "text-balance text-[clamp(2.25rem,5vw,4.25rem)] font-black uppercase leading-[0.98] tracking-[-0.03em]"
 
 export default async function MasterPage() {
+  const settings = await getMasterclassSettings("master1")
   const price = formatPrice(settings.price)
   const meta = [
     { label: "Дата и время", value: settings.date },
@@ -221,7 +222,7 @@ export default async function MasterPage() {
               После заполнения формы вы перейдёте на защищённую страницу ЮKassa. Участие подтвердится после успешной оплаты.
             </p>
           </div>
-          <CaptureForm mode="masterclass" price={price} />
+          <CaptureForm mode="masterclass" price={price} page="master1" />
         </div>
       </section>
 

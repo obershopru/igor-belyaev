@@ -10,6 +10,7 @@ import type { StaffRole } from "@/lib/admin-auth"
 const allTabs = [
   { id: "leads", label: "Заявки", roles: ["admin"] },
   { id: "masterclass", label: "Мастер-класс", roles: ["admin"] },
+  { id: "masterclass1", label: "Мастер-класс 1", roles: ["admin"] },
   { id: "blog", label: "Блог", roles: ["admin", "editor"] },
 ] as const
 
@@ -68,7 +69,8 @@ export function AdminDashboard({ role }: { role: StaffRole }) {
       )}
 
       {tab === "leads" && <LeadsPanel />}
-      {tab === "masterclass" && <MasterclassPanel />}
+      {tab === "masterclass" && <MasterclassPanel key="master" />}
+      {tab === "masterclass1" && <MasterclassPanel key="master1" page="master1" />}
       {tab === "blog" && <BlogPanel role={role} />}
     </div>
   )
