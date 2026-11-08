@@ -61,11 +61,12 @@ export async function GET(request: Request) {
         consentAt: workshopLeads.consentAt,
         createdAt: workshopLeads.createdAt,
         source: workshopLeads.source,
+        page: workshopLeads.page,
       })
       .from(workshopLeads)
       .orderBy(desc(workshopLeads.createdAt), desc(workshopLeads.id))
 
-    const headings = ['ID', 'Имя', 'Телефон', 'Telegram', 'Согласие', 'Дата заявки', 'Источник']
+    const headings = ['ID', 'Имя', 'Телефон', 'Telegram', 'Согласие', 'Дата заявки', 'Источник', 'Страница']
     const csvRows = rows.map((row) => [
       row.id,
       row.name,
@@ -74,6 +75,7 @@ export async function GET(request: Request) {
       row.consentAt.toISOString(),
       row.createdAt.toISOString(),
       row.source === 'guide' ? 'Гайд' : 'Мастер-класс',
+      row.source === 'guide' ? '' : `/${row.page ?? 'master'}`,
     ])
     const csv = `\uFEFF${[headings, ...csvRows].map((row) => row.map(csvCell).join(',')).join('\r\n')}`
     const date = new Date().toISOString().slice(0, 10)

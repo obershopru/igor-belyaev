@@ -12,6 +12,7 @@ const statements = [
   `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_campaign text`,
   `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_content text`,
   `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS utm_term text`,
+  `ALTER TABLE workshop_leads ADD COLUMN IF NOT EXISTS page text`,
   `CREATE TABLE IF NOT EXISTS blog_posts (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     slug text NOT NULL,

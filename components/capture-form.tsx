@@ -53,9 +53,10 @@ export function CaptureForm({ mode = "guide", price = "9 990", payment = true, p
       telegram: String(data.get("telegram") ?? ""),
       consent: data.get("consent") === "on",
       source: mode,
+      ...(isMasterclass ? { page } : {}),
       utm: currentUtm(),
       ...(isCheckout
-        ? { page, salebotClientId: new URLSearchParams(window.location.search).get("salebot_client_id") ?? "" }
+        ? { salebotClientId: new URLSearchParams(window.location.search).get("salebot_client_id") ?? "" }
         : {}),
     }
 

@@ -18,6 +18,7 @@ export async function GET(request: Request) {
         id: workshopLeads.id,
         createdAt: workshopLeads.createdAt,
         source: workshopLeads.source,
+        page: workshopLeads.page,
         name: workshopLeads.name,
         phone: workshopLeads.phone,
         telegram: workshopLeads.telegram,

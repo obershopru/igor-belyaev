@@ -65,6 +65,7 @@ export async function POST(request: Request) {
       telegram,
       salebotClientId: salebotClientId || null,
       source: 'masterclass',
+      page,
       consentAt: new Date(),
       checkoutKey,
       paymentStatus: 'pending',

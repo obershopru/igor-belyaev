@@ -4,6 +4,7 @@ export type AdminLead = UtmColumns & {
   id: number
   createdAt: string
   source: string
+  page: string | null
   name: string
   phone: string
   telegram: string
@@ -15,12 +16,14 @@ export type AdminLead = UtmColumns & {
 }
 
 export type SourceFilter = 'all' | 'guide' | 'masterclass'
+export type PageFilter = 'all' | 'master' | 'master1'
 export type StatusFilter = 'all' | 'clicked' | 'not_clicked' | 'succeeded' | 'pending' | 'canceled'
 
 export type LeadFilters = {
   from: string
   to: string
   source: SourceFilter
+  page: PageFilter
   status: StatusFilter
   utmSource: string
   query: string
@@ -35,6 +38,11 @@ const TIME_ZONE = 'Europe/Moscow'
 export const sourceLabels: Record<string, string> = {
   guide: 'Гайд',
   masterclass: 'Мастер-класс',
+}
+
+// Masterclass leads without a mark predate /master1, so they came from /master.
+export function leadPage(lead: AdminLead) {
+  return lead.source === 'masterclass' ? `/${lead.page ?? 'master'}` : ''
 }
 
 export const paymentLabels: Record<string, string> = {
@@ -127,6 +135,7 @@ export function filterLeads(leads: AdminLead[], filters: LeadFilters) {
   return leads.filter((lead) =>
     inPeriod(lead, filters.from, filters.to)
     && (filters.source === 'all' || lead.source === filters.source)
+    && (filters.page === 'all' || leadPage(lead) === `/${filters.page}`)
     && matchesStatus(lead, filters.status)
     && (!filters.utmSource || utmValue(lead, 'utm_source') === filters.utmSource)
     && matchesQuery(lead, filters.query),
@@ -190,10 +199,11 @@ function telegramCell(telegram: string) {
 
 // Semicolon separator and BOM so Russian-locale Excel opens the file with correct columns and Cyrillic.
 export function leadsToCsv(leads: AdminLead[]) {
-  const header = ['Дата', 'Тип', 'Имя', 'Телефон', 'Telegram', 'Переход в бота', 'Оплата', 'Сумма', 'Salebot', ...UTM_KEYS].map(csvCell)
+  const header = ['Дата', 'Тип', 'Страница', 'Имя', 'Телефон', 'Telegram', 'Переход в бота', 'Оплата', 'Сумма', 'Salebot', ...UTM_KEYS].map(csvCell)
   const rows = leads.map((lead) => [
     csvCell(formatDateTime(lead.createdAt)),
     csvCell(sourceLabels[lead.source] ?? lead.source),
+    csvCell(leadPage(lead)),
     csvCell(lead.name),
     phoneCell(lead.phone),
     telegramCell(lead.telegram),

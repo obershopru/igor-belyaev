@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   type AdminLead,
   type LeadFilters,
+  type PageFilter,
   type SourceFilter,
   type StatusFilter,
   NO_UTM,
@@ -24,6 +25,7 @@ import {
   personKey,
   salebotLabels,
   sourceLabels,
+  leadPage,
   summarize,
   utmSources,
   utmValue,
@@ -94,7 +96,7 @@ export function LeadsPanel() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [period, setPeriod] = useState<string>("30")
-  const [filters, setFilters] = useState<LeadFilters>({ from: daysAgoKey(29), to: "", source: "all", status: "all", utmSource: "", query: "" })
+  const [filters, setFilters] = useState<LeadFilters>({ from: daysAgoKey(29), to: "", source: "all", page: "all", status: "all", utmSource: "", query: "" })
   const [selected, setSelected] = useState<AdminLead | null>(null)
   const [groupBy, setGroupBy] = useState<UtmKey>("utm_source")
 
@@ -279,12 +281,23 @@ export function LeadsPanel() {
           <select
             aria-label="Тип заявки"
             value={filters.source}
-            onChange={(event) => updateFilters({ source: event.target.value as SourceFilter, status: "all" })}
+            onChange={(event) => updateFilters({ source: event.target.value as SourceFilter, status: "all", page: "all" })}
             className={controlClass}
           >
             <option value="all">Все заявки</option>
             <option value="guide">Гайд</option>
             <option value="masterclass">Мастер-класс</option>
+          </select>
+          <select
+            aria-label="Страница"
+            value={filters.page}
+            onChange={(event) => updateFilters({ page: event.target.value as PageFilter })}
+            disabled={filters.source === "guide"}
+            className={`${controlClass} disabled:opacity-50`}
+          >
+            <option value="all">Все страницы</option>
+            <option value="master">/master</option>
+            <option value="master1">/master1</option>
           </select>
           <select
             aria-label="Статус"
@@ -342,7 +355,10 @@ export function LeadsPanel() {
                   className="cursor-pointer border-b border-zinc-900 transition-colors hover:bg-zinc-900"
                 >
                   <td className="whitespace-nowrap px-4 py-3 tabular-nums text-zinc-400">{formatDateTime(lead.createdAt)}</td>
-                  <td className="whitespace-nowrap px-4 py-3">{sourceLabels[lead.source] ?? lead.source}</td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {sourceLabels[lead.source] ?? lead.source}
+                    {leadPage(lead) && <span className="ml-2 rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">{leadPage(lead)}</span>}
+                  </td>
                   <td className="px-4 py-3 font-bold">
                     <button type="button" className="text-left hover:text-yellow-400" onClick={(event) => { event.stopPropagation(); setSelected(lead) }}>
                       {lead.name}

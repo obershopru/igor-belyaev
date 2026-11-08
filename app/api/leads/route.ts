@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { workshopLeads } from '@/lib/db/schema'
+import { parseMasterclassPage } from '@/lib/masterclass'
 import { parseUtm } from '@/lib/utm'
 
 export const runtime = 'nodejs'
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
       phone,
       telegram,
       source,
+      page: source === 'masterclass' ? parseMasterclassPage(values.page) : null,
       consentAt: new Date(),
       botClickKey,
       ...parseUtm(values.utm),
