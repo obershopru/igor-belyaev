@@ -7,6 +7,8 @@ import { currentUtm, rememberUtm } from "@/lib/utm"
 type CaptureFormProps = {
   mode?: "guide" | "masterclass"
   price?: string
+  /** Masterclass only: false saves a plain request instead of opening the payment page. */
+  payment?: boolean
 }
 
 const fields = [
@@ -15,13 +17,14 @@ const fields = [
   { id: "telegram", label: "Ник в Telegram", placeholder: "@username", type: "text", autoComplete: "off", required: false },
 ] as const
 
-export function CaptureForm({ mode = "guide", price = "9 990" }: CaptureFormProps) {
+export function CaptureForm({ mode = "guide", price = "9 990", payment = true }: CaptureFormProps) {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const checkoutKey = useRef<string | null>(null)
   const botClickKey = useRef<string | null>(null)
   const isMasterclass = mode === "masterclass"
+  const isCheckout = isMasterclass && payment
 
   useEffect(() => {
     rememberUtm()
@@ -49,7 +52,7 @@ export function CaptureForm({ mode = "guide", price = "9 990" }: CaptureFormProp
       consent: data.get("consent") === "on",
       source: mode,
       utm: currentUtm(),
-      ...(isMasterclass
+      ...(isCheckout
         ? { salebotClientId: new URLSearchParams(window.location.search).get("salebot_client_id") ?? "" }
         : {}),
     }
@@ -58,18 +61,18 @@ export function CaptureForm({ mode = "guide", price = "9 990" }: CaptureFormProp
     setError(null)
 
     try {
-      const endpoint = isMasterclass ? "/api/payments/create" : "/api/leads"
-      if (isMasterclass) {
+      const endpoint = isCheckout ? "/api/payments/create" : "/api/leads"
+      if (isCheckout) {
         checkoutKey.current ??= window.crypto.randomUUID()
       }
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, ...(isMasterclass ? { checkoutKey: checkoutKey.current } : {}) }),
+        body: JSON.stringify({ ...payload, ...(isCheckout ? { checkoutKey: checkoutKey.current } : {}) }),
       })
       const result = await response.json().catch(() => null)
       if (!response.ok) throw new Error(result?.error ?? "Не удалось отправить заявку. Попробуйте ещё раз.")
-      if (isMasterclass) {
+      if (isCheckout) {
         if (typeof result?.redirectUrl !== "string") throw new Error("Не удалось получить ссылку на оплату. Попробуйте ещё раз.")
         window.location.assign(result.redirectUrl)
         return
@@ -95,7 +98,9 @@ export function CaptureForm({ mode = "guide", price = "9 990" }: CaptureFormProp
           Спасибо!
         </h2>
         <p className="mt-3 text-pretty leading-relaxed text-zinc-400">
-          Данные сохранены. Перейдите в Telegram-бота, чтобы забрать гайд.
+          {isMasterclass
+            ? "Заявка принята. Менеджер свяжется с вами, пришлёт программу и ссылку на оплату, согласует дату и время."
+            : "Данные сохранены. Перейдите в Telegram-бота, чтобы забрать гайд."}
         </p>
         {!isMasterclass && (
           <a
@@ -185,7 +190,9 @@ export function CaptureForm({ mode = "guide", price = "9 990" }: CaptureFormProp
         disabled={submitting}
         className="mt-1 h-14 w-full rounded-xl bg-yellow-400 text-base font-black uppercase tracking-wide text-black transition-colors hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? (isMasterclass ? "Переход к оплате..." : "Отправка...") : isMasterclass ? `Оплатить через СБП — ${price} рублей` : "Забрать гайд в Telegram"}
+        {submitting
+          ? (isCheckout ? "Переход к оплате..." : "Отправка...")
+          : isCheckout ? `Оплатить через СБП — ${price} рублей` : isMasterclass ? "Отправить заявку" : "Забрать гайд в Telegram"}
       </button>
     </form>
   )

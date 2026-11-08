@@ -81,7 +81,10 @@ export default function Page() {
 
       {/* Footer */}
       <footer className="flex flex-col gap-4 px-5 py-8 text-xs text-zinc-500 md:flex-row md:items-center md:justify-between md:px-10">
-        <span className="font-black uppercase tracking-[0.2em] text-zinc-300">Игорь Беляев</span>
+        <div className="flex flex-col gap-1">
+          <span className="font-black uppercase tracking-[0.2em] text-zinc-300">Игорь Беляев</span>
+          <span>ИП Чалунин Максим Александрович · ОГРНИП 326965800233302 · ИНН 668601656614</span>
+        </div>
         <nav className="flex flex-col gap-2 md:flex-row md:gap-5" aria-label="Юридические документы">
           <a href="/blog" className="transition-colors hover:text-yellow-400">Блог</a>
           <a href="https://drive.google.com/file/d/18mjLhJ1Pk6L_Lg8o-heN4RLQOUA5L9-c/view" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-yellow-400">Политика обработки персональных данных</a>

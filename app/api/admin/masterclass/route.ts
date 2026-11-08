@@ -34,6 +34,7 @@ export async function PUT(request: Request) {
   try {
     const settings = await saveMasterclassSettings(body)
     revalidatePath('/master')
+    revalidatePath('/master1')
     return adminResponse({ settings })
   } catch {
     return adminError('Не удалось сохранить настройки.', 503)

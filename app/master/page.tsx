@@ -3,8 +3,8 @@ import { Banknote, Ban, Gauge, Users } from "lucide-react"
 import { CaptureForm } from "@/components/capture-form"
 import { JsonLd } from "@/components/json-ld"
 import { WorkshopCases } from "@/components/workshop-cases"
-import { formatPrice, getMasterclassSettings } from "@/lib/masterclass"
-import { PERSON_ID, absoluteUrl, breadcrumbSchema, graph, moscowIso, parseRussianEventDate, personSchema } from "@/lib/seo"
+import { getMasterclassSettings } from "@/lib/masterclass"
+import { breadcrumbSchema, graph, personSchema } from "@/lib/seo"
 
 export const metadata: Metadata = {
   title: "Мастер-класс по переговорам — Игорь Беляев",
@@ -67,39 +67,13 @@ const sectionTitle = "text-balance text-[clamp(2.25rem,5vw,4.25rem)] font-black 
 
 export default async function MasterPage() {
   const settings = await getMasterclassSettings()
-  const price = formatPrice(settings.price)
   const meta = [
-    { label: "Дата и время", value: settings.date },
     { label: "Формат", value: "Онлайн мастер-класс в Zoom" },
     { label: "Длительность", value: settings.duration },
-    { label: "Стоимость участия", value: `${price} ₽` },
+    { label: "Дата и время", value: "Согласуются с менеджером" },
   ]
 
-  const startDate = parseRussianEventDate(settings.date)
   const structuredData = graph(
-    ...(startDate
-      ? [{
-          "@type": "Event",
-          "@id": absoluteUrl("/master#event"),
-          name: "Мастер-класс «Уступить нельзя договориться»",
-          description: program.map((item) => item.text).join(" "),
-          startDate: moscowIso(startDate),
-          eventStatus: "https://schema.org/EventScheduled",
-          eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
-          location: { "@type": "VirtualLocation", url: absoluteUrl("/master") },
-          image: [absoluteUrl("/expert-mk-hero.jpg")],
-          inLanguage: "ru-RU",
-          organizer: { "@id": PERSON_ID },
-          performer: { "@id": PERSON_ID },
-          offers: {
-            "@type": "Offer",
-            url: absoluteUrl("/master"),
-            price: settings.price,
-            priceCurrency: "RUB",
-            availability: "https://schema.org/InStock",
-          },
-        }]
-      : []),
     {
       "@type": "FAQPage",
       mainEntity: faq.map((item) => ({
@@ -129,11 +103,11 @@ export default async function MasterPage() {
               Как сохранять сильную позицию в переговорах, обсуждать деньги и условия, выдерживать давление и приходить к конкретным договорённостям.
             </p>
             <a href="#participation" className="mt-8 inline-flex h-12 items-center justify-center rounded-full bg-yellow-400 px-7 font-bold text-black transition-opacity hover:opacity-90">
-              Оплатить
+              Оставить заявку
             </a>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {meta.map((item) => (
               <div key={item.label} className="flex flex-col items-center justify-start rounded-2xl bg-zinc-950 p-4 text-center md:p-6">
                 <span className="text-xs uppercase tracking-[0.16em] text-zinc-500">{item.label}</span>
@@ -208,21 +182,19 @@ export default async function MasterPage() {
       <section id="participation" className="scroll-mt-6 px-5 py-12 md:px-10 md:py-16">
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
           <div>
-            <h2 className={sectionTitle}>Стоимость и формат</h2>
+            <h2 className={sectionTitle}>Формат участия</h2>
             <div className="mt-6 flex flex-col gap-3 text-lg leading-relaxed text-zinc-200">
               <p className="font-bold">Онлайн мастер-класс в Zoom</p>
-              <p><span className="text-zinc-400">Дата и время:</span> {settings.date}</p>
               <p><span className="text-zinc-400">Длительность:</span> {settings.duration}</p>
-              <p><span className="text-zinc-400">Стоимость участия:</span> {price} рублей</p>
             </div>
             <p className="mt-6 max-w-[60ch] text-base leading-relaxed text-zinc-400">
               Мастер-класс проходит в формате бизнес-игры с отдельными комнатами для участников: каждый сможет включиться в практику и получить личное взаимодействие.
             </p>
             <p className="mt-4 max-w-[60ch] text-sm leading-relaxed text-zinc-500">
-              После заполнения формы вы перейдёте на защищённую страницу ЮKassa. Участие подтвердится после успешной оплаты.
+              После заявки менеджер пришлёт программу и ссылку на оплату. Дата и время будут назначены и согласованы с менеджером.
             </p>
           </div>
-          <CaptureForm mode="masterclass" price={price} />
+          <CaptureForm mode="masterclass" payment={false} />
         </div>
       </section>
 
