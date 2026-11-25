@@ -1,8 +1,8 @@
 // Mentoring programme "Три шкалы влияния": facts for the /mentoring landing and the application form.
 // Shared by the page, the client form and the API, so keep it free of server-only imports.
 
+// The price is not published on the site: it is named on the call after the application.
 export const mentoringProgram = {
-  price: 340000,
   groupSize: 30,
   // Not approved with Igor yet. Each value is shown on the page only once it is filled in,
   // e.g. duration: '1 месяц', schedule: 'каждую неделю по 2 часа', start: '15 января'.

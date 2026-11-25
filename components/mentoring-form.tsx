@@ -5,45 +5,25 @@ import { useEffect, useRef, useState } from "react"
 import { mentoringQuestions } from "@/lib/mentoring"
 import { currentUtm, rememberUtm } from "@/lib/utm"
 
-// "default" matches /mentoring (black and yellow), "navy" matches /mentoring/v2 (the lesson deck's navy and gold).
-const tones = {
-  default: {
-    input:
-      "rounded-xl border-zinc-800 bg-black text-white placeholder:text-zinc-600 focus:border-yellow-400 focus:ring-yellow-400",
-    label: "font-extrabold tracking-[0.08em] text-zinc-400",
-    card: "rounded-2xl bg-zinc-950",
-    icon: "rounded-full bg-yellow-400 text-black",
-    heading: "font-black tracking-tight text-white",
-    text: "text-zinc-400",
-    eyebrow: "font-black tracking-[0.18em] text-yellow-400",
-    legend: "font-bold text-zinc-300",
-    faint: "text-zinc-600",
-    hint: "text-zinc-500",
-    option:
-      "rounded-xl border-zinc-800 bg-black text-zinc-200 hover:border-zinc-600 has-[:checked]:border-yellow-400 has-[:checked]:text-white",
-    accent: "accent-yellow-400",
-    link: "text-zinc-200 hover:text-yellow-400",
-    button: "rounded-xl bg-yellow-400 font-black tracking-wide text-black hover:bg-yellow-300",
-  },
-  navy: {
-    input:
-      "rounded-md border-[#2A3350] bg-[#0B1020] text-[#E9EAEE] placeholder:text-[#596075] focus:border-[#C9A066] focus:ring-[#C9A066]",
-    label: "font-normal tracking-[0.14em] text-[#A3A9B6]",
-    card: "rounded-lg border border-[#2A3350] bg-[#070B19]",
-    icon: "rounded-full border border-[#C9A066] text-[#C9A066]",
-    heading: "font-normal tracking-[0.01em] text-[#E9EAEE]",
-    text: "text-[#A3A9B6]",
-    eyebrow: "font-normal tracking-[0.24em] text-[#C9A066]",
-    legend: "font-normal text-[#E9EAEE]",
-    faint: "text-[#6E7589]",
-    hint: "text-[#8A90A0]",
-    option:
-      "rounded-md border-[#2A3350] bg-[#0B1020] text-[#C9CDD6] hover:border-[#4A5470] has-[:checked]:border-[#C9A066] has-[:checked]:text-[#E9EAEE]",
-    accent: "accent-[#C9A066]",
-    link: "text-[#E9EAEE] hover:text-[#C9A066]",
-    button: "rounded-md bg-[#C9A066] font-normal tracking-[0.12em] text-[#070B19] hover:bg-[#D6B27D]",
-  },
-} as const
+// Classes in the palette of the /mentoring page (the lesson deck's navy and gold).
+const t = {
+  input:
+    "rounded-md border-[#2A3350] bg-[#0B1020] text-[#E9EAEE] placeholder:text-[#596075] focus:border-[#C9A066] focus:ring-[#C9A066]",
+  label: "font-normal tracking-[0.14em] text-[#A3A9B6]",
+  card: "rounded-lg border border-[#2A3350] bg-[#070B19]",
+  icon: "rounded-full border border-[#C9A066] text-[#C9A066]",
+  heading: "font-normal tracking-[0.01em] text-[#E9EAEE]",
+  text: "text-[#A3A9B6]",
+  eyebrow: "font-normal tracking-[0.24em] text-[#C9A066]",
+  legend: "font-normal text-[#E9EAEE]",
+  faint: "text-[#6E7589]",
+  hint: "text-[#8A90A0]",
+  option:
+    "rounded-md border-[#2A3350] bg-[#0B1020] text-[#C9CDD6] hover:border-[#4A5470] has-[:checked]:border-[#C9A066] has-[:checked]:text-[#E9EAEE]",
+  accent: "accent-[#C9A066]",
+  link: "text-[#E9EAEE] hover:text-[#C9A066]",
+  button: "rounded-md bg-[#C9A066] font-normal tracking-[0.12em] text-[#070B19] hover:bg-[#D6B27D]",
+}
 
 const contacts = [
   { id: "name", label: "Имя", placeholder: "Иван Иванов", type: "text", autoComplete: "name", required: true, maxLength: 120 },
@@ -51,8 +31,7 @@ const contacts = [
   { id: "telegram", label: "Ник в Telegram", placeholder: "@username", type: "text", autoComplete: "off", required: false, maxLength: 64 },
 ] as const
 
-export function MentoringForm({ tone = "default" }: { tone?: keyof typeof tones }) {
-  const t = tones[tone]
+export function MentoringForm() {
   const inputClass = `w-full border px-4 outline-none transition-colors focus:ring-1 ${t.input}`
   const labelClass = `mb-1.5 block text-[11px] uppercase ${t.label}`
   const [submitted, setSubmitted] = useState(false)
