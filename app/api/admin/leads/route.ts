@@ -32,6 +32,7 @@ export async function GET(request: Request) {
         utmCampaign: workshopLeads.utmCampaign,
         utmContent: workshopLeads.utmContent,
         utmTerm: workshopLeads.utmTerm,
+        answers: workshopLeads.answers,
       })
       .from(workshopLeads)
       .orderBy(desc(workshopLeads.createdAt))

@@ -74,8 +74,8 @@ export async function GET(request: Request) {
       row.telegram,
       row.consentAt.toISOString(),
       row.createdAt.toISOString(),
-      row.source === 'guide' ? 'Гайд' : 'Мастер-класс',
-      row.source === 'guide' ? '' : `/${row.page ?? 'master'}`,
+      row.source === 'guide' ? 'Гайд' : row.source === 'mentoring' ? 'Наставничество' : 'Мастер-класс',
+      row.source === 'guide' ? '' : row.source === 'mentoring' ? '/mentoring' : `/${row.page ?? 'master'}`,
     ])
     const csv = `\uFEFF${[headings, ...csvRows].map((row) => row.map(csvCell).join(',')).join('\r\n')}`
     const date = new Date().toISOString().slice(0, 10)

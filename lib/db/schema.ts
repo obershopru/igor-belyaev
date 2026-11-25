@@ -27,6 +27,8 @@ export const workshopLeads = pgTable('workshop_leads', {
   utmCampaign: text('utm_campaign'),
   utmContent: text('utm_content'),
   utmTerm: text('utm_term'),
+  // Mentoring application questionnaire: { questionId: answer }. Null for other lead types.
+  answers: jsonb('answers').$type<Record<string, string>>(),
 })
 
 export const siteSettings = pgTable('site_settings', {

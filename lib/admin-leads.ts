@@ -1,3 +1,4 @@
+import { mentoringQuestions } from './mentoring'
 import { type UtmColumns, type UtmKey, UTM_KEYS, utmColumnByKey } from './utm'
 
 export type AdminLead = UtmColumns & {
@@ -13,10 +14,11 @@ export type AdminLead = UtmColumns & {
   paymentStatus: string | null
   paymentAmount: number | null
   salebotNotificationStatus: string | null
+  answers: Record<string, string> | null
 }
 
-export type SourceFilter = 'all' | 'guide' | 'masterclass'
-export type PageFilter = 'all' | 'master' | 'master1'
+export type SourceFilter = 'all' | 'guide' | 'masterclass' | 'mentoring'
+export type PageFilter = 'all' | 'master' | 'master1' | 'mentoring'
 export type StatusFilter = 'all' | 'clicked' | 'not_clicked' | 'succeeded' | 'pending' | 'canceled'
 
 export type LeadFilters = {
@@ -38,11 +40,19 @@ const TIME_ZONE = 'Europe/Moscow'
 export const sourceLabels: Record<string, string> = {
   guide: 'Гайд',
   masterclass: 'Мастер-класс',
+  mentoring: 'Наставничество',
 }
 
 // Masterclass leads without a mark predate /master1, so they came from /master.
+// The mentoring form lives only on /mentoring.
 export function leadPage(lead: AdminLead) {
+  if (lead.source === 'mentoring') return '/mentoring'
   return lead.source === 'masterclass' ? `/${lead.page ?? 'master'}` : ''
+}
+
+// Questionnaire answers in question order, for the lead card.
+export function mentoringAnswerRows(lead: AdminLead) {
+  return mentoringQuestions.map((question) => ({ id: question.id, label: question.label, answer: lead.answers?.[question.id] ?? '' }))
 }
 
 export const paymentLabels: Record<string, string> = {
@@ -154,12 +164,13 @@ export function summarize(leads: AdminLead[]) {
     tracked: tracked.length,
     clicked: clicked.length,
     masterclass: masterclass.length,
+    mentoring: leads.filter((lead) => lead.source === 'mentoring').length,
     paid: paid.length,
     revenue: paid.reduce((sum, lead) => sum + leadAmount(lead), 0),
   }
 }
 
-export type UtmGroup = { value: string; leads: number; guide: number; clicked: number; masterclass: number; paid: number; revenue: number }
+export type UtmGroup = { value: string; leads: number; guide: number; clicked: number; masterclass: number; mentoring: number; paid: number; revenue: number }
 
 // Leads per value of one UTM tag, busiest first, so the admin sees which ads bring registrations and payments.
 export function groupByUtm(leads: AdminLead[], key: UtmKey): UtmGroup[] {
@@ -170,7 +181,7 @@ export function groupByUtm(leads: AdminLead[], key: UtmKey): UtmGroup[] {
   }
   return [...groups].map(([value, items]) => {
     const stats = summarize(items)
-    return { value, leads: items.length, guide: stats.guide, clicked: stats.clicked, masterclass: stats.masterclass, paid: stats.paid, revenue: stats.revenue }
+    return { value, leads: items.length, guide: stats.guide, clicked: stats.clicked, masterclass: stats.masterclass, mentoring: stats.mentoring, paid: stats.paid, revenue: stats.revenue }
   }).sort((a, b) => b.leads - a.leads)
 }
 
@@ -199,7 +210,7 @@ function telegramCell(telegram: string) {
 
 // Semicolon separator and BOM so Russian-locale Excel opens the file with correct columns and Cyrillic.
 export function leadsToCsv(leads: AdminLead[]) {
-  const header = ['Дата', 'Тип', 'Страница', 'Имя', 'Телефон', 'Telegram', 'Переход в бота', 'Оплата', 'Сумма', 'Salebot', ...UTM_KEYS].map(csvCell)
+  const header = ['Дата', 'Тип', 'Страница', 'Имя', 'Телефон', 'Telegram', 'Переход в бота', 'Оплата', 'Сумма', 'Salebot', ...UTM_KEYS, ...mentoringQuestions.map((question) => question.label)].map(csvCell)
   const rows = leads.map((lead) => [
     csvCell(formatDateTime(lead.createdAt)),
     csvCell(sourceLabels[lead.source] ?? lead.source),
@@ -212,6 +223,7 @@ export function leadsToCsv(leads: AdminLead[]) {
     csvCell(lead.source === 'masterclass' ? leadAmount(lead) : ''),
     csvCell(lead.source === 'masterclass' ? salebotLabels[lead.salebotNotificationStatus ?? ''] ?? '—' : '—'),
     ...UTM_KEYS.map((key) => csvCell(lead[utmColumnByKey[key]])),
+    ...mentoringQuestions.map((question) => csvCell(lead.answers?.[question.id])),
   ])
   return `﻿${[header, ...rows].map((row) => row.join(';')).join('\r\n')}`
 }

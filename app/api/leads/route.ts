@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { workshopLeads } from '@/lib/db/schema'
 import { parseMasterclassPage } from '@/lib/masterclass'
+import { parseMentoringAnswers } from '@/lib/mentoring'
 import { parseUtm } from '@/lib/utm'
 
 export const runtime = 'nodejs'
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
   const name = typeof values.name === 'string' ? values.name.trim() : ''
   const phone = typeof values.phone === 'string' ? values.phone.trim() : ''
   const telegram = typeof values.telegram === 'string' ? values.telegram.trim() : ''
-  const source = values.source === 'guide' ? 'guide' : values.source === 'masterclass' ? 'masterclass' : null
+  const source = values.source === 'guide' || values.source === 'masterclass' || values.source === 'mentoring' ? values.source : null
   const phoneDigits = phone.replace(/\D/g, '')
 
   if (name.length < 2 || name.length > 120) {
@@ -62,6 +63,11 @@ export async function POST(request: Request) {
 
   if (telegram.length > 64 || !source || values.consent !== true) {
     return NextResponse.json({ error: 'Проверьте контактные данные и подтвердите согласие.' }, { status: 400, headers: jsonHeaders })
+  }
+
+  const answers = source === 'mentoring' ? parseMentoringAnswers(values.answers) : null
+  if (source === 'mentoring' && !answers) {
+    return NextResponse.json({ error: 'Ответьте, пожалуйста, на все вопросы анкеты.' }, { status: 400, headers: jsonHeaders })
   }
 
   if (!process.env.DATABASE_URL) {
@@ -78,6 +84,7 @@ export async function POST(request: Request) {
       page: source === 'masterclass' ? parseMasterclassPage(values.page) : null,
       consentAt: new Date(),
       botClickKey,
+      answers,
       ...parseUtm(values.utm),
     })
 

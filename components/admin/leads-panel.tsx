@@ -26,6 +26,7 @@ import {
   salebotLabels,
   sourceLabels,
   leadPage,
+  mentoringAnswerRows,
   summarize,
   utmSources,
   utmValue,
@@ -38,6 +39,12 @@ const periods = [
   { id: "30", label: "30 дней", days: 29 },
   { id: "all", label: "Всё время", days: null },
 ] as const
+
+const pageOptions: { value: Exclude<PageFilter, "all">; label: string; source: SourceFilter }[] = [
+  { value: "master", label: "/master", source: "masterclass" },
+  { value: "master1", label: "/master1", source: "masterclass" },
+  { value: "mentoring", label: "/mentoring", source: "mentoring" },
+]
 
 const statusOptions: Record<SourceFilter, { value: StatusFilter; label: string }[]> = {
   all: [{ value: "all", label: "Любой статус" }],
@@ -52,6 +59,7 @@ const statusOptions: Record<SourceFilter, { value: StatusFilter; label: string }
     { value: "pending", label: "Ожидает оплаты" },
     { value: "canceled", label: "Отменено" },
   ],
+  mentoring: [{ value: "all", label: "Любой статус" }],
 }
 
 const controlClass = "h-10 rounded-xl border border-zinc-800 bg-black px-3 text-sm text-white outline-none transition-colors focus:border-yellow-400"
@@ -205,7 +213,7 @@ export function LeadsPanel() {
         </div>
       </div>
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-6" aria-label="Сводка за период">
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-7" aria-label="Сводка за период">
         <StatCard label="Людей" value={String(stats.people)} note="уникальных по телефону" />
         <StatCard label="Заявки на гайд" value={String(stats.guide)} />
         <StatCard
@@ -216,6 +224,7 @@ export function LeadsPanel() {
         <StatCard label="Регистрации на МК" value={String(stats.masterclass)} />
         <StatCard label="Оплатили" value={String(stats.paid)} note={`${percent(stats.paid, stats.masterclass)} от регистраций`} />
         <StatCard label="Выручка" value={formatMoney(stats.revenue)} />
+        <StatCard label="Наставничество" value={String(stats.mentoring)} note="заявок в группу" />
       </section>
 
       <section className="flex flex-col gap-4 rounded-2xl bg-zinc-950 p-4 md:p-6" aria-label="Источники трафика">
@@ -238,6 +247,7 @@ export function LeadsPanel() {
                 <th className="px-4 py-3 text-right font-extrabold">МК</th>
                 <th className="px-4 py-3 text-right font-extrabold">Оплатили</th>
                 <th className="px-4 py-3 text-right font-extrabold">Выручка</th>
+                <th className="px-4 py-3 text-right font-extrabold">Наставн.</th>
               </tr>
             </thead>
             <tbody>
@@ -256,11 +266,12 @@ export function LeadsPanel() {
                   <td className="px-4 py-3 text-right tabular-nums">{group.masterclass}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{group.paid} <span className="text-zinc-500">({percent(group.paid, group.masterclass)})</span></td>
                   <td className="px-4 py-3 text-right tabular-nums">{formatMoney(group.revenue)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{group.mentoring}</td>
                 </tr>
               ))}
               {utmGroups.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-zinc-500">Нет заявок за период.</td>
+                  <td colSpan={8} className="px-4 py-6 text-center text-zinc-500">Нет заявок за период.</td>
                 </tr>
               )}
             </tbody>
@@ -287,6 +298,7 @@ export function LeadsPanel() {
             <option value="all">Все заявки</option>
             <option value="guide">Гайд</option>
             <option value="masterclass">Мастер-класс</option>
+            <option value="mentoring">Наставничество</option>
           </select>
           <select
             aria-label="Страница"
@@ -296,8 +308,11 @@ export function LeadsPanel() {
             className={`${controlClass} disabled:opacity-50`}
           >
             <option value="all">Все страницы</option>
-            <option value="master">/master</option>
-            <option value="master1">/master1</option>
+            {pageOptions
+              .filter((option) => filters.source === "all" || option.source === filters.source)
+              .map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
           </select>
           <select
             aria-label="Статус"
@@ -417,10 +432,19 @@ export function LeadsPanel() {
                 {history.map((lead) => (
                   <li key={lead.id} className="rounded-xl bg-black p-4 text-sm">
                     <div className="flex items-center justify-between gap-3">
-                      <strong>{lead.source === "guide" ? "Заявка на гайд" : "Регистрация на мастер-класс"}</strong>
+                      <strong>{lead.source === "guide" ? "Заявка на гайд" : lead.source === "mentoring" ? "Заявка на наставничество" : "Регистрация на мастер-класс"}</strong>
                       <span className="tabular-nums text-xs text-zinc-500">{formatDateTime(lead.createdAt)}</span>
                     </div>
-                    {lead.source === "guide" ? (
+                    {lead.source === "mentoring" ? (
+                      <dl className="mt-3 flex flex-col gap-3">
+                        {mentoringAnswerRows(lead).map((row) => (
+                          <div key={row.id}>
+                            <dt className="text-xs text-zinc-500">{row.label}</dt>
+                            <dd className="mt-0.5 whitespace-pre-wrap break-words text-zinc-200">{row.answer || "—"}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : lead.source === "guide" ? (
                       <p className="mt-2 text-zinc-400">
                         Бот: {botClickLabel(lead)}
                         {lead.botClickedAt && <span className="text-zinc-500"> · {formatDateTime(lead.botClickedAt)}</span>}
